@@ -42,14 +42,6 @@ namespace ASze.CustomPlayButton
         {
             get
             {
-                if (bookmark == null)
-                {
-                    bookmark = ScriptableObject.CreateInstance<SceneBookmark>();
-                    if (!Directory.Exists(FOLDER_PATH))
-                        Directory.CreateDirectory(FOLDER_PATH);
-                    AssetDatabase.CreateAsset(bookmark, SETTING_PATH);
-                    AssetDatabase.Refresh();
-                }
                 return bookmark;
             }
         }
@@ -96,11 +88,7 @@ namespace ASze.CustomPlayButton
             ToolbarExtender.LeftToolbarGUI.Add(OnToolbarLeftGUI);
             EditorApplication.update += OnUpdate;
 
-            if (bookmark == null)
-            {
-                bookmark = AssetDatabase.LoadAssetAtPath<SceneBookmark>(SETTING_PATH);
-                Bookmark?.RemoveNullValue();
-            }
+            EditorApplication.delayCall += DelayLoadBookmark;
 
             var savedScenePath = EditorPrefs.GetString(GetEditorPrefKey(), "");
             selectedScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(savedScenePath);
@@ -112,6 +100,23 @@ namespace ASze.CustomPlayButton
 
             customSceneContent = CreateIconContent("PlaySceneButton.png", "d_UnityEditor.Timeline.TimelineWindow@2x", "Play Custom Scene");
             gameSceneContent = CreateIconContent("PlayGameButton.png", "d_UnityEditor.GameView@2x", "Play Game Scene");
+        }
+
+        static void DelayLoadBookmark()
+        {
+            if (bookmark == null && File.Exists(SETTING_PATH))
+            {
+                bookmark = AssetDatabase.LoadAssetAtPath<SceneBookmark>(SETTING_PATH);
+            }
+
+            if (bookmark == null)
+            {
+                bookmark = ScriptableObject.CreateInstance<SceneBookmark>();
+                if (!Directory.Exists(FOLDER_PATH))
+                    Directory.CreateDirectory(FOLDER_PATH);
+                AssetDatabase.CreateAsset(bookmark, SETTING_PATH);
+                AssetDatabase.Refresh();
+            }
         }
 
         static void OnToolbarLeftGUI()
